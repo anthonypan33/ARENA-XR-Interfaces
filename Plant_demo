@@ -1,0 +1,136 @@
+from subprocess import _USE_POSIX_SPAWN
+from arena import * 
+from yarl import URL
+
+arena = Scene(host="mqtt.arenaxr.org", scene='example')
+global Ui_panel_container
+my_buttons = {}
+my_popups = {}
+pop_functions = {}
+active_object = None
+
+def mouse_handler(arena,evt,msg):
+    global my_buttons
+    global pop_functions
+    global active_object
+
+    if (evt.type == 'mouseenter' or evt.type == 'mouseleave'):
+        return
+
+    if active_object is not None and evt.type == 'mouseup':
+        # active_object.delete()
+        print("object deleted")
+        arena.delete_object(active_object)
+    
+    target_button=my_buttons.get(evt.object_id)
+    if target_button is None:
+        print("unknown button")
+        return
+    
+    target_function=pop_functions.get(evt.object_id)
+    if target_function is None:
+        print("unkown function")
+        return
+
+    if evt.type =="mousedown":
+        print("mousedown")
+        target_button.dispatch_animation(
+            AnimationMixer(clip="Button_down", loop="once")
+            # Animation(property="position", easing="linear", dur=1000)
+        )
+        arena.run_animations(target_button)
+        
+
+    if evt.type =="mouseup":
+        print("mouseup")
+        target_button.dispatch_animation(
+            AnimationMixer(clip="Button_up", loop="once")
+        )
+        arena.run_animations(target_button)
+        active_object=target_function()
+
+
+
+
+
+@arena.run_once
+def main():
+    global Ui_panel_container
+    global my_buttons
+    
+    
+    Ui_panel_container = GLTF(object_id="Panel_container", position=Position(0,1,0),scale=Scale(0.5,0.5,0.5), rotation=Rotation(70,0,0), url="store/users/azp/Models/Plant_ui/Plant_UI_Panel_container.glb")
+    button_fertilize = GLTF(object_id="Fertilize_Button", position=Position(0,0,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Plant_UI_Fertilize_Button.glb", parent="Panel_container")
+    button_water = GLTF(object_id="Water_Button", position=Position(0,0,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Plant_UI_Water_Button.glb", parent="Panel_container")
+    button_light = GLTF(object_id="Light_Button", position=Position(0,0,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Plant_UI_Light_Button.glb", parent="Panel_container")
+    button_plant_info = GLTF(object_id="Plant_Info_Button", position=Position(0,0,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Plant_UI_Plant_info_Button.glb", parent="Panel_container")
+    
+    
+    arena.add_object(Ui_panel_container)
+    arena.update_object(Ui_panel_container)
+
+    my_buttons["Fertilize_Button"] = button_fertilize
+    arena.add_object(button_fertilize)
+    arena.update_object(button_fertilize, click_listener=True, evt_handler=mouse_handler)
+
+    my_buttons["Water_Button"] = button_water
+    arena.add_object(button_water)
+    arena.update_object(button_water, click_listener=True, evt_handler=mouse_handler)
+
+    my_buttons["Light_Button"] = button_light
+    arena.add_object(button_light)
+    arena.update_object(button_light, click_listener=True, evt_handler=mouse_handler)
+
+    my_buttons["Plant_Info_Button"] = button_plant_info
+    arena.add_object(button_plant_info)
+    arena.update_object(button_plant_info, click_listener=True, evt_handler=mouse_handler)
+
+
+def fert_pop_func():
+    fert_pop = GLTF(object_id="Fertilizer_popup", position=Position(0,0.05,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Fert_Pop.glb", parent="Panel_container")
+
+    my_popups["Fertilizer_Button"] = fert_pop
+    arena.add_object(fert_pop)
+    arena.update_object(fert_pop)
+
+    return fert_pop
+
+def water_pop_func():
+    water_pop = GLTF(object_id="Water_popup", position=Position(-3.5,0.05,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Water_Pop.glb", parent="Panel_container")
+
+    my_popups["Water_Button"] = water_pop
+    arena.add_object(water_pop)
+    arena.update_object(water_pop)
+
+    return water_pop
+
+def light_pop_func():
+    light_pop = GLTF(object_id="Light_popup", position=Position(-6.9,0.05,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Light_Pop.glb", parent="Panel_container")
+
+    my_popups["Light_Button"] = light_pop
+    arena.add_object(light_pop)
+    arena.update_object(light_pop)
+
+    return light_pop
+
+def plant_pop_func():
+    plant_pop = GLTF(object_id="Plant_popup", position=Position(-10.30,0.05,0), scale=Scale(1,1,1), rotation=Rotation(0,0,0), url="store/users/azp/Models/Plant_ui/Info_Pop.glb", parent="Panel_container")
+
+    my_popups["Plant_Button"] = plant_pop
+    arena.add_object(plant_pop)
+    arena.update_object(plant_pop)
+
+    return plant_pop
+
+pop_functions["Fertilize_Button"] = fert_pop_func
+pop_functions["Water_Button"] = water_pop_func
+pop_functions["Light_Button"] = light_pop_func
+pop_functions["Plant_Info_Button"] = plant_pop_func
+
+
+arena.run_tasks()
+
+#create function for each pop up menu
+#add each function a new my_popups dictionary using same keys as my_buttons dictionary
+#
+
